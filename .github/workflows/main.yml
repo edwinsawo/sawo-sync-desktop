@@ -1,0 +1,35 @@
+name: Automation Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  google-sheets-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Update Google Sheet
+        uses: google-github-actions/sheets@v1
+        with:
+          credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+          spreadsheet_id: ${{ secrets.SHEET_ID }}
+          range: "A1"
+          values: "New commit pushed by ${{ github.actor }}"
+
+  whatsapp-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send WhatsApp message
+        run: |
+          curl -X POST https://api.twilio.com/2010-04-01/Accounts/${{ secrets.TWILIO_SID }}/Messages.json \
+          --data-urlencode "Body=New commit on main branch!" \
+          --data-urlencode "From=whatsapp:${{ secrets.TWILIO_WHATSAPP_NUMBER }}" \
+          --data-urlencode "To=whatsapp:${{ secrets.MY_WHATSAPP_NUMBER }}" \
+          -u ${{ secrets.TWILIO_SID }}:${{ secrets.TWILIO_AUTH_TOKEN }}
+
+
+
